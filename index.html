@@ -1,18 +1,382 @@
-<!DOCTYPE HTML>
-<html>
-	<head>
-		<title>David Clarke</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<link rel="stylesheet" href="assets/css/main.css" />
-	</head>
-	<body class="is-preload">
-		<!-- Header -->
-			<header id="header">
-				<a href="https://blog.david-clarke.id.au"><img src="https://david-clarke.id.au/images/logo.png"></a>
-			</header>
-		<!-- Scripts -->
-			<script src="assets/js/main.js"></script>
-	</body>
-</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>David Clarke</title>
+<meta name="description" content="David Clarke — two wheels and four." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --red:#e10600; --ink:#f6f6f8; --muted:#c9cad2;
+    --display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
+    --body:"Inter",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#000;color:var(--ink);font-family:var(--body);overflow:hidden}
 
+  #viewport{position:fixed;inset:0;overflow-y:scroll;scrollbar-width:none;-ms-overflow-style:none}
+  #viewport::-webkit-scrollbar{display:none}
+  #track{will-change:transform}
+
+  .panel{position:relative;height:100svh;width:100%;overflow:hidden;display:flex;align-items:flex-end}
+  .panel .media{position:absolute;inset:-8% 0;background-size:cover;background-position:center;
+    will-change:transform;transform:translateY(0) scale(1.06)}
+  .panel .scrim{position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.12) 34%, rgba(0,0,0,0) 55%, rgba(0,0,0,.35) 100%)}
+
+  .caption{position:relative;z-index:3;padding:0 clamp(24px,5vw,80px) clamp(40px,8vh,90px);max-width:1100px}
+  .caption .num,.caption h2,.caption .sub{opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease}
+  .caption h2{transition-delay:.08s}
+  .caption .sub{transition-delay:.16s}
+  .caption.in .num,.caption.in h2,.caption.in .sub{opacity:1;transform:none}
+  .caption .num{font-family:var(--display);font-weight:800;font-size:clamp(3rem,10vw,7rem);line-height:.8;
+    color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.55)}
+  .caption h2{font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.02em;
+    font-size:clamp(1.8rem,5vw,3.2rem);margin:10px 0 6px;text-shadow:0 2px 30px rgba(0,0,0,.6)}
+  .caption .sub{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  .caption .sub .dot{color:var(--red)}
+
+  .hud{position:fixed;inset:0;z-index:20;pointer-events:none}
+  .hud a,.hud button{pointer-events:auto}
+  .brand{position:absolute;top:24px;left:clamp(24px,5vw,80px);display:flex;align-items:center;gap:14px}
+  .brand .logo{height:46px;width:auto;display:block;filter:drop-shadow(0 2px 10px rgba(0,0,0,.65))}
+  .menu{position:absolute;top:30px;right:clamp(24px,5vw,80px);display:flex;align-items:center;gap:20px}
+  .menu a{font-family:var(--mono);font-size:12.5px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;transition:color .25s}
+  .menu a:hover{color:#fff}
+
+  .fsbtn{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);
+    backdrop-filter:blur(6px);display:grid;place-items:center;opacity:.55;transition:opacity .25s,border-color .25s;cursor:pointer}
+  .fsbtn:hover{opacity:1;border-color:rgba(255,255,255,.6)}
+  .fsbtn svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:1.8}
+  .fsbtn .exit{display:none}
+  html.is-fullscreen .fsbtn .enter{display:none}
+  html.is-fullscreen .fsbtn .exit{display:block}
+
+  .counter{position:absolute;bottom:34px;right:clamp(24px,5vw,80px);font-family:var(--mono);font-size:13px;letter-spacing:.14em;color:var(--muted);
+    display:flex;align-items:center;gap:12px}
+  .counter b{color:#fff}
+  .autobadge{display:flex;align-items:center;gap:7px;opacity:0;transform:translateY(4px);transition:opacity .5s ease,transform .5s ease}
+  .autobadge.on{opacity:1;transform:none}
+  .autobadge .pulse{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 8px rgba(225,6,0,.9);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+  .rail{position:absolute;left:0;top:0;bottom:0;width:3px;z-index:21}
+  .rail .fill{position:absolute;top:0;left:0;width:100%;height:0;background:var(--red);box-shadow:0 0 12px rgba(225,6,0,.8)}
+  .ticks{position:fixed;left:8px;top:0;bottom:0;width:10px;z-index:21;pointer-events:none}
+  .tick{position:absolute;left:0;width:4px;height:1px;background:rgba(255,255,255,.28);transform:translateY(-50%);transition:width .25s,height .25s,background .25s,box-shadow .25s}
+  .tick.active{width:10px;height:2px;background:var(--red);box-shadow:0 0 8px rgba(225,6,0,.85)}
+
+  .cue{position:absolute;bottom:34px;left:clamp(24px,5vw,80px);font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted);display:flex;align-items:center;gap:10px;
+    transition:opacity .5s ease}
+  .cue.hide{opacity:0}
+  .cue .b{width:2px;height:28px;background:linear-gradient(var(--red),transparent);animation:drop 1.8s ease-in-out infinite}
+  @keyframes drop{0%,100%{transform:scaleY(.4);transform-origin:top;opacity:.4}50%{transform:scaleY(1);opacity:1}}
+
+  .grade{position:fixed;inset:0;z-index:15;pointer-events:none;
+    background:radial-gradient(130% 130% at 50% 45%,transparent 55%,rgba(0,0,0,.65) 100%)}
+  .grain{position:fixed;inset:0;z-index:16;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  #ambient{position:fixed;inset:0;z-index:14;opacity:0;pointer-events:none;transition:opacity .8s ease}
+  #ambient.on{opacity:1}
+  .af-layer{position:absolute;inset:-8% 0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease}
+  .af-layer.front{opacity:1}
+  .af-cap{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:0 clamp(24px,5vw,80px) clamp(40px,8vh,90px);max-width:1100px}
+  .af-num{font-family:var(--display);font-weight:800;font-size:clamp(3rem,10vw,7rem);line-height:.8;color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.55)}
+  .af-title{font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.02em;font-size:clamp(1.8rem,5vw,3.2rem);margin:10px 0 6px;text-shadow:0 2px 30px rgba(0,0,0,.6)}
+  .af-sub{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  .af-sub .dot{color:var(--red)}
+
+  @media (max-width:640px){.menu{gap:14px}.cue{display:none}.ticks{left:5px}}
+  @media (prefers-reduced-motion:reduce){
+    .panel .media{transform:none!important;inset:0}
+    .cue .b,.autobadge .pulse{animation:none}
+    .caption .num,.caption h2,.caption .sub{transition:opacity .2s ease;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="viewport"><div id="track"></div></div>
+
+<div class="grade"></div>
+<div class="grain"></div>
+
+<div id="ambient" aria-hidden="true">
+  <div class="af-layer front" id="afA"></div>
+  <div class="af-layer" id="afB"></div>
+  <div class="af-cap">
+    <div class="af-num" id="afNum">01</div>
+    <h2 class="af-title" id="afTitle"></h2>
+    <div class="af-sub" id="afSub"><span class="dot">&#9679;</span> <span id="afSubText"></span></div>
+  </div>
+</div>
+
+<div class="hud">
+  <div class="rail"><div class="fill" id="rail"></div></div>
+  <div class="ticks" id="ticks"></div>
+
+  <a class="brand" href="https://blog.david-clarke.id.au" aria-label="David Clarke — Australia and Italy">
+    <svg class="logo" viewBox="0 0 64 44" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Australian and Italian flags">
+      <defs>
+        <clipPath id="badge"><rect x="0" y="0" width="64" height="44" rx="5"/></clipPath>
+        <clipPath id="canton"><rect x="0" y="0" width="32" height="12"/></clipPath>
+      </defs>
+      <g clip-path="url(#badge)">
+        <rect x="0" y="0" width="64" height="24" fill="#00247D"/>
+        <g clip-path="url(#canton)">
+          <path d="M0,0 L32,12 M32,0 L0,12" stroke="#fff" stroke-width="3.4"/>
+          <path d="M0,0 L32,12 M32,0 L0,12" stroke="#CF142B" stroke-width="1.3"/>
+          <path d="M16,0 L16,12 M0,6 L32,6" stroke="#fff" stroke-width="4"/>
+          <path d="M16,0 L16,12 M0,6 L32,6" stroke="#CF142B" stroke-width="2"/>
+        </g>
+        <path d="M0,-1L0.2245,-0.309L0.9511,-0.309L0.3633,0.118L0.5878,0.809L0,0.382L-0.5878,0.809L-0.3633,0.118L-0.9511,-0.309L-0.2245,-0.309Z" transform="translate(16,18) scale(3.2)" fill="#fff"/>
+        <path d="M0,-1L0.2245,-0.309L0.9511,-0.309L0.3633,0.118L0.5878,0.809L0,0.382L-0.5878,0.809L-0.3633,0.118L-0.9511,-0.309L-0.2245,-0.309Z" transform="translate(50,4) scale(1.9)" fill="#fff"/>
+        <path d="M0,-1L0.2245,-0.309L0.9511,-0.309L0.3633,0.118L0.5878,0.809L0,0.382L-0.5878,0.809L-0.3633,0.118L-0.9511,-0.309L-0.2245,-0.309Z" transform="translate(42,13) scale(1.9)" fill="#fff"/>
+        <path d="M0,-1L0.2245,-0.309L0.9511,-0.309L0.3633,0.118L0.5878,0.809L0,0.382L-0.5878,0.809L-0.3633,0.118L-0.9511,-0.309L-0.2245,-0.309Z" transform="translate(50,21) scale(1.9)" fill="#fff"/>
+        <path d="M0,-1L0.2245,-0.309L0.9511,-0.309L0.3633,0.118L0.5878,0.809L0,0.382L-0.5878,0.809L-0.3633,0.118L-0.9511,-0.309L-0.2245,-0.309Z" transform="translate(58,12) scale(1.9)" fill="#fff"/>
+        <path d="M0,-1L0.2245,-0.309L0.9511,-0.309L0.3633,0.118L0.5878,0.809L0,0.382L-0.5878,0.809L-0.3633,0.118L-0.9511,-0.309L-0.2245,-0.309Z" transform="translate(52,14) scale(1.0)" fill="#fff"/>
+        <rect x="0" y="24" width="21.33" height="20" fill="#009246"/>
+        <rect x="21.33" y="24" width="21.33" height="20" fill="#F1F2F1"/>
+        <rect x="42.66" y="24" width="21.34" height="20" fill="#CE2B37"/>
+      </g>
+      <rect x="0.6" y="0.6" width="62.8" height="42.8" rx="4.6" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/>
+    </svg>
+  </a>
+
+  <nav class="menu">
+    <a href="https://blog.david-clarke.id.au">My Blog</a>
+    <a href="mailto:hello@david-clarke.id.au">Contact</a>
+    <button class="fsbtn" id="fsbtn" type="button" aria-label="Toggle fullscreen">
+      <svg class="enter" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      <svg class="exit" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
+    </button>
+  </nav>
+
+  <div class="counter">
+    <span class="autobadge" id="autobadge"><span class="pulse"></span>AUTO</span>
+    <span><b id="cnum">01</b> / <span id="ctot">21</span></span>
+  </div>
+  <div class="cue" id="cue"><span class="b"></span>SCROLL</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var BASE = "https://david-clarke.id.au/images/";
+  // [ file, title, sub ] — edit freely.
+  var SHOTS = [
+    ["bg01.jpg","Desmosedici","Ducati Corse · MotoGP"],
+    ["bg02.jpg","Corse","Ducati · Livery"],
+    ["bg03.jpg","Tricolore","Ducati Corse"],
+    ["bg04.jpg","488","Ferrari · Maranello"],
+    ["bg05.jpg","Casa Ferrari","Maranello, IT"],
+    ["bg06.jpg","Ride on Kentucky Kid","MotoGP"],
+    ["bg07.jpg","Closer to the Edge","Twisties"],
+    ["bg08.jpg","Stoner @ Siberia","Ducati · MotoGP"],
+    ["bg09.jpg","On The Gas","Ducati Desmosedici"],
+    ["bg10.jpg","Sliding Stoner","Sepang"],
+    ["bg11.jpg","Hayden Hill","Legends Never Die"],
+    ["bg12.jpg","Mugello","Tuscany, Italy"],
+    ["bg13.jpg","The Maniac","Under Lights"],
+    ["bg14.jpg","Schuey","1998 Ferrari F300"],
+    ["bg15.jpg","Nicky","Aspar"],
+    ["bg16.jpg","Scuderia","Vintage F1"],
+    ["bg17.jpg","Maniac - Suzuki","MotoGP"],
+    ["bg18.jpg","Nicky @ Sibera","I was there!"],
+    ["bg19.jpg","N\u00ba 69","A tribute"],
+    ["bg20.jpg","Panigale","Ducati · The Road"],
+    ["bg21.jpg","911 GT3 RS","Porsche · Track"]
+  ];
+  var COUNT = SHOTS.length;
+
+  var reduce = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) || false;
+  var vp = document.getElementById("viewport");
+  var track = document.getElementById("track");
+  document.getElementById("ctot").textContent = pad(COUNT);
+  function pad(n){ return ("0"+n).slice(-2); }
+
+  /* ---------- build panels (two copies => seamless infinite loop) ---------- */
+  function buildPanel(s, i){
+    var p = document.createElement("div"); p.className="panel";
+    var m = document.createElement("div"); m.className="media";
+    m.style.backgroundImage = 'url("'+BASE+s[0]+'")';
+    var scrim = document.createElement("div"); scrim.className="scrim";
+    var cap = document.createElement("div"); cap.className="caption"; cap.dataset.idx = i;
+    var sub = s[2] ? '<div class="sub"><span class="dot">&#9679;</span> '+s[2]+'</div>' : '';
+    cap.innerHTML = '<div class="num">'+pad(i+1)+'</div><h2>'+s[1]+'</h2>'+sub;
+    p.appendChild(m); p.appendChild(scrim); p.appendChild(cap);
+    return p;
+  }
+  function buildSet(){ SHOTS.forEach(function(s,i){ track.appendChild(buildPanel(s,i)); }); }
+  buildSet(); buildSet();
+
+  var medias = Array.prototype.slice.call(document.querySelectorAll(".media"));
+  var captions = Array.prototype.slice.call(document.querySelectorAll(".caption"));
+
+  /* ---------- filmstrip position ticks ---------- */
+  var ticksEl = document.getElementById("ticks");
+  var ticks = SHOTS.map(function(s,i){
+    var t = document.createElement("div"); t.className="tick";
+    t.style.top = (COUNT>1 ? (i/(COUNT-1))*100 : 0)+"%";
+    ticksEl.appendChild(t); return t;
+  });
+
+  var panelH=0, setH=0;
+  function measure(){ panelH = window.innerHeight; setH = panelH*COUNT; vp.scrollTop = setH; }
+  window.addEventListener("resize", measure);
+
+  var cnum = document.getElementById("cnum"), rail = document.getElementById("rail");
+  var cue = document.getElementById("cue"), autobadge = document.getElementById("autobadge");
+  var idx = -1;
+
+  function setActive(newIdx){
+    if(newIdx===idx) return;
+    idx = newIdx;
+    cnum.textContent = pad(idx+1);
+    for(var i=0;i<captions.length;i++){
+      captions[i].classList.toggle("in", Number(captions[i].dataset.idx)===idx);
+    }
+    for(var j=0;j<ticks.length;j++){ ticks[j].classList.toggle("active", j===idx); }
+  }
+
+  /* ---------- idle detection + cursor tracking ---------- */
+  /* ---------- ambient crossfade slideshow (setInterval-driven, not rAF) ---------- */
+  var IDLE_MS = 5000, ADVANCE_MS = 5000;
+  var lastActivity = performance.now();
+  var mouseNX = 0, mouseNXTarget = 0;
+  var keyTarget = null; // scrollTop tween target for keyboard nav
+
+  var ambientEl = document.getElementById("ambient");
+  var afA = document.getElementById("afA"), afB = document.getElementById("afB");
+  var afNum = document.getElementById("afNum"), afTitle = document.getElementById("afTitle");
+  var afSub = document.getElementById("afSub"), afSubText = document.getElementById("afSubText");
+  var afFront = afA, afBack = afB, afIdx = 0;
+  var ambientOn = false, advanceTimer = null;
+
+  function renderAmbientCaption(i){
+    afNum.textContent = pad(i+1);
+    afTitle.textContent = SHOTS[i][1];
+    if(SHOTS[i][2]){ afSubText.textContent = SHOTS[i][2]; afSub.style.display=""; }
+    else { afSub.style.display="none"; }
+    setActive(i);
+  }
+  function engageAmbient(){
+    if(ambientOn) return;
+    ambientOn = true;
+    afIdx = idx < 0 ? 0 : idx;
+    afFront.style.backgroundImage = 'url("'+BASE+SHOTS[afIdx][0]+'")';
+    afFront.classList.add("front"); afBack.classList.remove("front");
+    renderAmbientCaption(afIdx);
+    ambientEl.classList.add("on");
+    autobadge.classList.add("on");
+    cue.classList.add("hide");
+    advanceTimer = setInterval(advanceAmbient, ADVANCE_MS);
+  }
+  function advanceAmbient(){
+    afIdx = (afIdx+1) % COUNT;
+    afBack.style.backgroundImage = 'url("'+BASE+SHOTS[afIdx][0]+'")';
+    afBack.classList.add("front"); afFront.classList.remove("front");
+    var tmp = afFront; afFront = afBack; afBack = tmp;
+    renderAmbientCaption(afIdx);
+  }
+  function disengageAmbient(){
+    if(!ambientOn) return;
+    ambientOn = false;
+    clearInterval(advanceTimer); advanceTimer = null;
+    ambientEl.classList.remove("on");
+    autobadge.classList.remove("on");
+    vp.scrollTop = setH + afIdx*panelH; // resume manual scroll from where the fade left off
+  }
+  function poke(){
+    lastActivity = performance.now();
+    if(ambientOn) disengageAmbient();
+  }
+
+  window.addEventListener("mousemove", function(e){
+    poke();
+    mouseNXTarget = (e.clientX/window.innerWidth - 0.5) * 2;
+  }, {passive:true});
+  ["wheel","touchstart","touchmove"].forEach(function(evt){
+    window.addEventListener(evt, function(){ poke(); keyTarget = null; }, {passive:true});
+  });
+  var KEY_COOLDOWN = 220, lastKeyNav = 0;
+  window.addEventListener("keydown", function(e){
+    var isDown = e.key==="ArrowDown"||e.key==="PageDown";
+    var isUp = e.key==="ArrowUp"||e.key==="PageUp";
+    var onLink = document.activeElement && document.activeElement.tagName==="A";
+    var isSpace = e.key===" " && !onLink;
+    if(!isDown && !isUp && !isSpace) return;
+
+    poke();
+    e.preventDefault();
+    var now = performance.now();
+    if(now - lastKeyNav < KEY_COOLDOWN) return; // rate limit: drop extra presses within the cooldown window
+    lastKeyNav = now;
+    if(isDown || isSpace){ keyTarget = (keyTarget===null ? vp.scrollTop : keyTarget) + panelH; }
+    else { keyTarget = (keyTarget===null ? vp.scrollTop : keyTarget) - panelH; }
+  });
+
+  /* ---------- fullscreen toggle ---------- */
+  setInterval(function(){
+    if(!ambientOn && (performance.now() - lastActivity) > IDLE_MS){ engageAmbient(); }
+  }, 400);
+
+  var fsbtn = document.getElementById("fsbtn");
+  fsbtn.addEventListener("click", function(){
+    if(!document.fullscreenElement){ document.documentElement.requestFullscreen().catch(function(){}); }
+    else { document.exitFullscreen(); }
+  });
+  document.addEventListener("fullscreenchange", function(){
+    document.documentElement.classList.toggle("is-fullscreen", !!document.fullscreenElement);
+  });
+
+  /* ---------- master render loop (manual scroll + keyboard tween + parallax only) ---------- */
+  var prevTs = null;
+
+  function loop(ts){
+    if(prevTs===null) prevTs = ts;
+    prevTs = ts;
+
+    cue.classList.toggle("hide", ambientOn || (ts - lastActivity) > 1400);
+
+    if(keyTarget !== null){
+      var diff = keyTarget - vp.scrollTop;
+      if(reduce || Math.abs(diff) < 0.5){ vp.scrollTop = keyTarget; keyTarget = null; }
+      else { vp.scrollTop += diff * 0.22; }
+    }
+
+    var y = vp.scrollTop;
+    if(!ambientOn){
+      if(y < setH*0.5){ var s1=setH; vp.scrollTop = y+s1; y = vp.scrollTop; if(keyTarget!==null) keyTarget+=s1; }
+      else if(y > setH*1.5){ var s2=setH; vp.scrollTop = y-s2; y = vp.scrollTop; if(keyTarget!==null) keyTarget-=s2; }
+
+      setActive(Math.round((y % setH)/panelH) % COUNT);
+      rail.style.height = (((y % setH)/setH)*100)+"%";
+    }
+
+    if(!reduce){
+      mouseNX += (mouseNXTarget - mouseNX) * 0.06;
+      var vh = window.innerHeight;
+      for(var i=0;i<medias.length;i++){
+        var el = medias[i], r = el.parentNode.getBoundingClientRect();
+        if(r.bottom < -vh || r.top > vh*2) continue;
+        var center = r.top + r.height/2, off = (center - vh/2)/vh;
+        el.style.transform = "translate("+(mouseNX*1.6)+"%,"+(off*7)+"%) scale(1.12)";
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener("load", measure);
+  measure();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
