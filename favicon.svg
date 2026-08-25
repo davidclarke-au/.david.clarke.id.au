@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <clipPath id="badge"><rect x="0" y="0" width="64" height="64" rx="10"/></clipPath>
+    <clipPath id="canton"><rect x="0" y="0" width="35.84" height="32"/></clipPath>
+  </defs>
+  <g clip-path="url(#badge)">
+    <rect x="0" y="0" width="64" height="32" fill="#00247D"/>
+    <g clip-path="url(#canton)">
+      <path d="M0,0 L35.84,32 M35.84,0 L0,32" stroke="#fff" stroke-width="2.9"/>
+      <path d="M0,0 L35.84,32 M35.84,0 L0,32" stroke="#CF142B" stroke-width="1.15"/>
+      <path d="M17.92,0 L17.92,32 M0,16 L35.84,16" stroke="#fff" stroke-width="3.8"/>
+      <path d="M17.92,0 L17.92,32 M0,16 L35.84,16" stroke="#CF142B" stroke-width="1.7"/>
+    </g>
+    <path d="M0,-1L0.2245,-0.309L0.9511,-0.309L0.3633,0.118L0.5878,0.809L0,0.382L-0.5878,0.809L-0.3633,0.118L-0.9511,-0.309L-0.2245,-0.309Z" transform="translate(19.2,26.24) scale(5.44)" fill="#fff"/>
+    <path d="M0,-1L0.2245,-0.309L0.9511,-0.309L0.3633,0.118L0.5878,0.809L0,0.382L-0.5878,0.809L-0.3633,0.118L-0.9511,-0.309L-0.2245,-0.309Z" transform="translate(51.2,6.4) scale(3.52)" fill="#fff"/>
+    <path d="M0,-1L0.2245,-0.309L0.9511,-0.309L0.3633,0.118L0.5878,0.809L0,0.382L-0.5878,0.809L-0.3633,0.118L-0.9511,-0.309L-0.2245,-0.309Z" transform="translate(44.8,14.72) scale(3.52)" fill="#fff"/>
+    <path d="M0,-1L0.2245,-0.309L0.9511,-0.309L0.3633,0.118L0.5878,0.809L0,0.382L-0.5878,0.809L-0.3633,0.118L-0.9511,-0.309L-0.2245,-0.309Z" transform="translate(55.04,19.84) scale(3.52)" fill="#fff"/>
+    <path d="M0,-1L0.2245,-0.309L0.9511,-0.309L0.3633,0.118L0.5878,0.809L0,0.382L-0.5878,0.809L-0.3633,0.118L-0.9511,-0.309L-0.2245,-0.309Z" transform="translate(60.16,12.16) scale(2.88)" fill="#fff"/>
+    <rect x="0" y="32" width="21.33" height="32" fill="#009246"/>
+    <rect x="21.33" y="32" width="21.33" height="32" fill="#F1F2F1"/>
+    <rect x="42.66" y="32" width="21.34" height="32" fill="#CE2B37"/>
+  </g>
+</svg>
