@@ -45,7 +45,7 @@
   #track{will-change:transform}
 
   .panel{position:relative;height:100svh;width:100%;overflow:hidden;display:flex;align-items:flex-end}
-  .panel .media{position:absolute;inset:-8% 0;will-change:transform;transform:translateY(0) scale(1.06);filter:url(#speedBlur)}
+  .panel .media{position:absolute;inset:-8% 0;will-change:transform;transform:translateY(0) scale(1.06)}
   .panel .media-blur,.panel .media-full{position:absolute;inset:0;background-size:cover;background-position:center}
   .panel .media-blur{filter:blur(16px);transform:scale(1.15)}
   .panel .media-full{opacity:0;transition:opacity .6s ease}
@@ -181,10 +181,6 @@
 
 <div class="grade"></div>
 <div class="grain"></div>
-
-<svg style="position:absolute;width:0;height:0" aria-hidden="true">
-  <filter id="speedBlur"><feGaussianBlur id="speedBlurStd" stdDeviation="0 0"/></filter>
-</svg>
 
 <div class="letterbox" id="letterboxTop"></div>
 <div class="letterbox" id="letterboxBottom"></div>
@@ -504,13 +500,11 @@
     document.documentElement.classList.toggle("is-fullscreen", !!document.fullscreenElement);
   });
 
-  /* ---------- master render loop (manual scroll + keyboard tween + parallax + speed-blur) ---------- */
-  var prevTs = null, lastY = null, blurAmt = 0;
-  var speedBlurStd = document.getElementById("speedBlurStd");
-  var SPEED_K = 3.0, MAX_BLUR = 9;
+  /* ---------- master render loop (manual scroll + keyboard tween + parallax) ---------- */
+  var prevTs = null;
 
   function loop(ts){
-    var dt = (prevTs===null) ? 16 : Math.max(1, ts - prevTs);
+    if(prevTs===null) prevTs = ts;
     prevTs = ts;
 
     cue.classList.toggle("hide", ambientOn || (ts - lastActivity) > 1400);
@@ -522,7 +516,6 @@
     }
 
     var y = vp.scrollTop;
-    var rawVel = (lastY===null) ? 0 : Math.abs(y - lastY) / dt; // px/ms, measured pre-wrap-correction
     if(!ambientOn){
       if(y < setH*0.5){ var s1=setH; vp.scrollTop = y+s1; y = vp.scrollTop; if(keyTarget!==null) keyTarget+=s1; }
       else if(y > setH*1.5){ var s2=setH; vp.scrollTop = y-s2; y = vp.scrollTop; if(keyTarget!==null) keyTarget-=s2; }
@@ -530,13 +523,8 @@
       setActive(Math.round((y % setH)/panelH) % COUNT);
       rail.style.height = (((y % setH)/setH)*100)+"%";
     }
-    lastY = y; // baseline for next frame, captured post-correction so wraps never read as a false spike
 
     if(!reduce){
-      var targetBlur = Math.min(MAX_BLUR, rawVel * SPEED_K);
-      blurAmt += (targetBlur - blurAmt) * 0.3;
-      if(speedBlurStd) speedBlurStd.setAttribute("stdDeviation", "0 "+blurAmt.toFixed(2));
-
       mouseNX += (mouseNXTarget - mouseNX) * 0.06;
       var vh = window.innerHeight;
       for(var i=0;i<medias.length;i++){
