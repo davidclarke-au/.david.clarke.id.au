@@ -71,17 +71,18 @@
   .caption .sub .dot{color:var(--red)}
 
   #intro{position:fixed;inset:0;z-index:50;background:#0a0a0c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+    pointer-events:none;
     transition:opacity .6s ease, visibility 0s linear .6s}
   #intro.hide{opacity:0;visibility:hidden;pointer-events:none}
-  .intro-circuit{position:absolute;top:50%;left:50%;transform:translate(-40.26%,-46.79%);width:min(94vw, calc(94vh * 1.428));height:auto;opacity:.48;pointer-events:none}
+  .intro-circuit{position:absolute;top:50%;left:50%;transform:translate(-40.26%,-46.79%);width:min(94vw, calc(94vh * 1.428));height:auto;opacity:.68;pointer-events:none}
   .intro-circuit path{fill:none;stroke:var(--red);stroke-width:5.5;stroke-linecap:round;stroke-linejoin:round;
     transition:stroke-dashoffset 3.2s cubic-bezier(.65,0,.35,1) .1s;
-    animation:trackPulse 1.7s ease-in-out 3.3s infinite}
-  @keyframes trackPulse{
-    0%,100%{opacity:1;filter:drop-shadow(0 0 0 transparent)}
-    50%{opacity:.55;filter:drop-shadow(0 0 10px var(--red))}
-  }
+    animation:trackPulse 1.8s ease-in-out 3.3s infinite}
   #intro.show .intro-circuit path{stroke-dashoffset:0}
+  @keyframes trackPulse{
+    0%,100%{filter:drop-shadow(0 0 3px rgba(225,6,0,.5))}
+    50%{filter:drop-shadow(0 0 18px rgba(225,6,0,1)) drop-shadow(0 0 30px rgba(225,6,0,.65))}
+  }
   .intro-badge{position:relative;z-index:1;width:min(46vw,180px);height:auto;display:block;opacity:0;transform:scale(.82);transition:opacity .55s ease,transform .55s ease}
   #intro.show .intro-badge{opacity:1;transform:scale(1)}
   .intro-title{position:relative;z-index:1;font-family:var(--display);font-weight:800;text-transform:uppercase;letter-spacing:.03em;
@@ -133,8 +134,7 @@
 
   #ambient{position:fixed;inset:0;z-index:14;opacity:0;pointer-events:none;transition:opacity .8s ease}
   #ambient.on{opacity:1}
-  .af-layer{position:absolute;inset:-8% 0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease}
-  .af-layer.front{opacity:1}
+  .af-layer{position:absolute;inset:-8% 0;background-size:cover;background-position:center;background-color:#0a0a0c}
   .af-cap{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:0 clamp(24px,5vw,80px) clamp(40px,8vh,90px);max-width:1100px}
   .af-num{font-family:var(--display);font-weight:800;font-size:clamp(3rem,10vw,7rem);line-height:.8;color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.55)}
   .af-title{font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.02em;font-size:clamp(1.8rem,5vw,3.2rem);margin:10px 0 6px;text-shadow:0 2px 30px rgba(0,0,0,.6)}
@@ -150,7 +150,7 @@
     .letterbox{transition:height .25s ease}
     #intro,#intro.hide{transition:opacity .25s ease}
     .intro-badge,.intro-title{transition:opacity .25s ease!important;transform:none!important}
-    .intro-circuit path{transition:none!important;animation:none!important}
+    .intro-circuit path{transition:none!important;animation:none!important;filter:none!important}
   }
 </style>
 </head>
@@ -173,8 +173,7 @@
 <div class="letterbox" id="letterboxBottom"></div>
 
 <div id="ambient" aria-hidden="true">
-  <div class="af-layer front" id="afA"></div>
-  <div class="af-layer" id="afB"></div>
+  <div class="af-layer" id="afPhoto"></div>
   <div class="af-cap">
     <div class="af-num" id="afNum">01</div>
     <h2 class="af-title" id="afTitle"></h2>
@@ -242,7 +241,7 @@
   /* ---------- intro title-card ---------- */
   (function(){
     var introEl = document.getElementById("intro");
-    var introTimer = null, dismissed = false;
+    var dismissed = false;
 
     var circuitPath = document.getElementById("circuitPath");
     if(circuitPath && circuitPath.getTotalLength){
@@ -258,7 +257,6 @@
     function hideIntro(){
       if(dismissed) return;
       dismissed = true;
-      if(introTimer) clearTimeout(introTimer);
       introEl.classList.remove("show");
       introEl.classList.add("hide");
     }
@@ -266,7 +264,10 @@
       hideIntro();
     } else {
       requestAnimationFrame(function(){ introEl.classList.add("show"); });
-      introTimer = setTimeout(hideIntro, 6400); // circuit draws (~3.3s), then pulses for a couple of cycles before fading
+      // dismisses on the first interaction (click/touch/key/scroll), same as before -
+      // PLUS a hard 9s backstop timer, so the site can never truly get stuck even if
+      // some interaction type fails to register for any reason
+      setTimeout(hideIntro, 9000);
       ["click","touchstart","keydown","wheel"].forEach(function(evt){
         window.addEventListener(evt, hideIntro, {once:true, passive:true});
       });
@@ -373,10 +374,10 @@
   var settleTimer = null; // debounce handle for snap-after-scroll-settles
 
   var ambientEl = document.getElementById("ambient");
-  var afA = document.getElementById("afA"), afB = document.getElementById("afB");
   var afNum = document.getElementById("afNum"), afTitle = document.getElementById("afTitle");
   var afSub = document.getElementById("afSub"), afSubText = document.getElementById("afSubText");
-  var afFront = afA, afBack = afB, afIdx = 0;
+  var afPhoto = document.getElementById("afPhoto");
+  var afIdx = 0;
   var ambientOn = false, advanceTimer = null;
 
   function renderAmbientCaption(i){
@@ -393,8 +394,7 @@
     if(ambientOn) return;
     ambientOn = true;
     afIdx = idx < 0 ? 0 : idx;
-    afFront.style.backgroundImage = 'url("'+BASE+SHOTS[afIdx][0]+'")';
-    afFront.classList.add("front"); afBack.classList.remove("front");
+    afPhoto.style.backgroundImage = 'url("'+BASE+SHOTS[afIdx][0]+'")';
     renderAmbientCaption(afIdx);
     ambientEl.classList.add("on");
     autobadge.classList.add("on");
@@ -405,9 +405,7 @@
   }
   function advanceAmbient(){
     afIdx = (afIdx+1) % COUNT;
-    afBack.style.backgroundImage = 'url("'+BASE+SHOTS[afIdx][0]+'")';
-    afBack.classList.add("front"); afFront.classList.remove("front");
-    var tmp = afFront; afFront = afBack; afBack = tmp;
+    afPhoto.style.backgroundImage = 'url("'+BASE+SHOTS[afIdx][0]+'")'; // direct hard cut - no transition, no async, nothing to race
     renderAmbientCaption(afIdx);
   }
   function disengageAmbient(){
